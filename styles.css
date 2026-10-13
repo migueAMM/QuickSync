@@ -965,6 +965,37 @@ ul, ol { list-style: none; }
   margin-top: var(--space-1);
 }
 
+/* Instagram link in footer */
+.footer-social {
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-2);
+  display: flex;
+  justify-content: center;
+}
+
+.footer-instagram {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  background: transparent;
+}
+
+.footer-instagram:hover {
+  color: #fff;
+  border-color: transparent;
+  /* Instagram brand gradient */
+  background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  box-shadow: 0 4px 20px rgba(220, 39, 67, 0.35);
+}
+
 /* ---- 15. SCROLLBAR (global) ---- */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }

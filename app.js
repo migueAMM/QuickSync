@@ -24,7 +24,7 @@ const PRODUCTS = [
     id: 1,
     name: 'Classic Bacon Burger',
     description: 'Jugosa carne de res 180g, bacon crujiente, cheddar fundido, lechuga, tomate y nuestra salsa secreta.',
-    price: 12.99,
+    price: 18900,
     image: 'assets/images/burger-classic.jpg',
     badge: 'popular',
     badgeText: '🔥 Popular',
@@ -33,7 +33,7 @@ const PRODUCTS = [
     id: 2,
     name: 'Double Smash Burger',
     description: 'Dos patties finos prensados, doble cheddar americano, pepinillos, cebolla caramelizada y salsa especial.',
-    price: 15.99,
+    price: 24900,
     image: 'assets/images/burger-double.jpg',
     badge: 'new',
     badgeText: '✨ Nuevo',
@@ -42,7 +42,7 @@ const PRODUCTS = [
     id: 3,
     name: 'Veggie Avocado Burger',
     description: 'Medallón de hongos portobello y frijol negro, aguacate fresco, pimientos asados y rúgula en pan integral.',
-    price: 11.49,
+    price: 16900,
     image: 'assets/images/burger-veggie.jpg',
     badge: 'vegan',
     badgeText: '🌿 Vegano',
@@ -51,18 +51,71 @@ const PRODUCTS = [
     id: 4,
     name: 'BBQ Pulled Pork Burger',
     description: 'Costilla de cerdo desmechada, coleslaw casero, aros de cebolla crujientes y salsa BBQ ahumada.',
-    price: 14.49,
+    price: 21900,
     image: 'assets/images/burger-bbq.jpg',
     badge: null,
     badgeText: null,
   },
+  {
+    id: 5,
+    name: 'Crispy Chicken Burger',
+    description: 'Pechuga de pollo apanada crujiente, coleslaw casero, pepinillos y salsa mostaza-miel en pan brioche.',
+    price: 17900,
+    image: 'assets/images/burger-chicken.jpg',
+    badge: 'popular',
+    badgeText: '🔥 Popular',
+  },
+  {
+    id: 6,
+    name: 'Mushroom Swiss Burger',
+    description: 'Champiñones salteados al vino, queso gruyère derretido, cebolla morada caramelizada y rúgula fresca.',
+    price: 19900,
+    image: 'assets/images/burger-mushroom.jpg',
+    badge: null,
+    badgeText: null,
+  },
+  {
+    id: 7,
+    name: 'Spicy Diablo Burger',
+    description: 'Jalapeños frescos, salsa sriracha, queso pepper jack, aros de cebolla y patty 200g a la parrilla. ¡Para valientes!',
+    price: 20900,
+    image: 'assets/images/burger-spicy.jpg',
+    badge: 'new',
+    badgeText: '🌶️ Picante',
+  },
+  {
+    id: 8,
+    name: 'Breakfast Burger',
+    description: 'Huevo frito, bacon crujiente, queso americano y medallón de papa hash brown. El desayuno perfecto en un pan.',
+    price: 19900,
+    image: 'assets/images/burger-breakfast.jpg',
+    badge: null,
+    badgeText: null,
+  },
+  {
+    id: 9,
+    name: 'Hawaiian Teriyaki Burger',
+    description: 'Piña asada a la parrilla, patty glaseado con teriyaki, jamón ahumado, queso suizo y salsa especial tropical.',
+    price: 21900,
+    image: 'assets/images/burger-hawaiian.jpg',
+    badge: null,
+    badgeText: null,
+  },
+  {
+    id: 10,
+    name: 'Black Truffle Burger',
+    description: 'Pan negro al carbón, carne wagyu, crema de trufa negra, queso brie fundido, cebolla caramelizada y microgreens.',
+    price: 35900,
+    image: 'assets/images/burger-truffle.jpg',
+    badge: 'popular',
+    badgeText: '⭐ Premium',
+  },
 ];
 
 /**
- * Número de WhatsApp del negocio (con código de país, sin + ni espacios).
- * CAMBIAR antes de desplegar en producción.
+ * Número de WhatsApp del negocio (Colombia — con código de país, sin + ni espacios).
  */
-const WHATSAPP_NUMBER = '521234567890';
+const WHATSAPP_NUMBER = '573192784589';
 
 /* ============================================================
    ███    ███  ██████  ██████  ███████ ██
@@ -597,13 +650,18 @@ const AppView = (() => {
   ───────────────────────────────────────────── */
 
   /**
-   * Formatea un número como precio con 2 decimales.
+   * Formatea un número como precio en Pesos Colombianos (COP).
+   * Ejemplo: 18900 → "$\u00a018.900"
    * @param {number} amount
    * @returns {string}
    */
   function _formatPrice(amount) {
-    // toFixed(2) seguido de toString para evitar problemas de punto flotante
-    return `$${Number(amount).toFixed(2)}`;
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   }
 
   return {
@@ -800,13 +858,20 @@ const AppController = (() => {
     message += `📍 *Dirección:* ${address}\n\n`;
     message += `📋 *DETALLE DEL PEDIDO:*\n`;
 
+    // Helper: formato COP, ej: $ 18.900
+    const toCOP = (amount) =>
+      new Intl.NumberFormat('es-CO', {
+        style: 'currency', currency: 'COP',
+        minimumFractionDigits: 0, maximumFractionDigits: 0,
+      }).format(amount);
+
     items.forEach(({ product, quantity }) => {
       // Cantidad validada como entero positivo (garantizado por el Model)
-      const lineTotal = (product.price * quantity).toFixed(2);
-      message += `  • ${quantity}x ${product.name} — $${lineTotal}\n`;
+      const lineTotal = toCOP(product.price * quantity);
+      message += `  • ${quantity}x ${product.name} — ${lineTotal}\n`;
     });
 
-    message += `\n💰 *TOTAL: $${subtotal.toFixed(2)}*\n`;
+    message += `\n💰 *TOTAL: ${toCOP(subtotal)}*\n`;
 
     if (notes) {
       message += `📝 *Notas:* ${notes}\n`;
