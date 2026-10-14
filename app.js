@@ -2,414 +2,859 @@
  * ============================================================
  * QuickSync — app.js
  * Arquitectura: MVC (Model–View–Controller) en Vanilla JS ES6+
- * Seguridad: Sin innerHTML con datos dinámicos, textContent,
- *            createElement, encodeURIComponent para URLs.
+ * Enfoque: Corporativo, Minimalista, Cero Emojis & Alta Gama
+ * Scroll Spy Dinámico con IntersectionObserver & Sync Bidireccional
  * ============================================================
  */
 
 'use strict';
 
-/* ============================================================
-   ██████  ██████   ██████  ██████  ██    ██  ██████ ████████ ███████
-   ██   ██ ██   ██ ██    ██ ██   ██ ██    ██ ██         ██    ██
-   ██████  ██████  ██    ██ ██   ██ ██    ██ ██         ██    ███████
-   ██      ██   ██ ██    ██ ██   ██ ██    ██ ██         ██         ██
-   ██      ██   ██  ██████  ██████   ██████   ██████    ██    ███████
-
-   DATOS DEL CATÁLOGO (mock data — en producción vendría de una API)
-   ============================================================ */
-
-const PRODUCTS = [
-  {
-    id: 1,
-    name: 'Classic Bacon Burger',
-    description: 'Jugosa carne de res 180g, bacon crujiente, cheddar fundido, lechuga, tomate y nuestra salsa secreta.',
-    price: 18900,
-    image: 'assets/images/burger-classic.jpg',
-    badge: 'popular',
-    badgeText: '🔥 Popular',
-  },
-  {
-    id: 2,
-    name: 'Double Smash Burger',
-    description: 'Dos patties finos prensados, doble cheddar americano, pepinillos, cebolla caramelizada y salsa especial.',
-    price: 24900,
-    image: 'assets/images/burger-double.jpg',
-    badge: 'new',
-    badgeText: '✨ Nuevo',
-  },
-  {
-    id: 3,
-    name: 'Veggie Avocado Burger',
-    description: 'Medallón de hongos portobello y frijol negro, aguacate fresco, pimientos asados y rúgula en pan integral.',
-    price: 16900,
-    image: 'assets/images/burger-veggie.jpg',
-    badge: 'vegan',
-    badgeText: '🌿 Vegano',
-  },
-  {
-    id: 4,
-    name: 'BBQ Pulled Pork Burger',
-    description: 'Costilla de cerdo desmechada, coleslaw casero, aros de cebolla crujientes y salsa BBQ ahumada.',
-    price: 21900,
-    image: 'assets/images/burger-bbq.jpg',
-    badge: null,
-    badgeText: null,
-  },
-  {
-    id: 5,
-    name: 'Crispy Chicken Burger',
-    description: 'Pechuga de pollo apanada crujiente, coleslaw casero, pepinillos y salsa mostaza-miel en pan brioche.',
-    price: 17900,
-    image: 'assets/images/burger-chicken.jpg',
-    badge: 'popular',
-    badgeText: '🔥 Popular',
-  },
-  {
-    id: 6,
-    name: 'Mushroom Swiss Burger',
-    description: 'Champiñones salteados al vino, queso gruyère derretido, cebolla morada caramelizada y rúgula fresca.',
-    price: 19900,
-    image: 'assets/images/burger-mushroom.jpg',
-    badge: null,
-    badgeText: null,
-  },
-  {
-    id: 7,
-    name: 'Spicy Diablo Burger',
-    description: 'Jalapeños frescos, salsa sriracha, queso pepper jack, aros de cebolla y patty 200g a la parrilla. ¡Para valientes!',
-    price: 20900,
-    image: 'assets/images/burger-spicy.jpg',
-    badge: 'new',
-    badgeText: '🌶️ Picante',
-  },
-  {
-    id: 8,
-    name: 'Breakfast Burger',
-    description: 'Huevo frito, bacon crujiente, queso americano y medallón de papa hash brown. El desayuno perfecto en un pan.',
-    price: 19900,
-    image: 'assets/images/burger-breakfast.jpg',
-    badge: null,
-    badgeText: null,
-  },
-  {
-    id: 9,
-    name: 'Hawaiian Teriyaki Burger',
-    description: 'Piña asada a la parrilla, patty glaseado con teriyaki, jamón ahumado, queso suizo y salsa especial tropical.',
-    price: 21900,
-    image: 'assets/images/burger-hawaiian.jpg',
-    badge: null,
-    badgeText: null,
-  },
-  {
-    id: 10,
-    name: 'Black Truffle Burger',
-    description: 'Pan negro al carbón, carne wagyu, crema de trufa negra, queso brie fundido, cebolla caramelizada y microgreens.',
-    price: 35900,
-    image: 'assets/images/burger-truffle.jpg',
-    badge: 'popular',
-    badgeText: '⭐ Premium',
-  },
-];
-
-/**
- * Número de WhatsApp del negocio (Colombia — con código de país, sin + ni espacios).
- */
+/** Número oficial de atención corporativa vía WhatsApp de QuickSync */
 const WHATSAPP_NUMBER = '573192784589';
 
-/* ============================================================
-   ███    ███  ██████  ██████  ███████ ██
-   ████  ████ ██    ██ ██   ██ ██      ██
-   ██ ████ ██ ██    ██ ██   ██ █████   ██
-   ██  ██  ██ ██    ██ ██   ██ ██      ██
-   ██      ██  ██████  ██████  ███████ ███████
+/** Tarifa fija de transporte metropolitano en COP */
+const SHIPPING_COST = 4000;
 
-   MODEL — gestiona el estado del carrito y los productos.
-   - Nunca toca el DOM.
-   - Precios siempre leídos del array PRODUCTS (no del HTML).
+/* ============================================================
+   1. MODELO DE DATOS (StoreModel)
+   Catálogo corporativo y gestión del estado de la orden
    ============================================================ */
 
-const CartModel = (() => {
-  /** @type {Map<number, {product: Object, quantity: number}>} */
-  let items = new Map();
+class StoreModel {
+  constructor() {
+    /**
+     * Catálogo gastronómico de alta gama en Pesos Colombianos (COP)
+     * Estructura: { id, name, price, tag, category, description, image }
+     * Cero emojis, redacción profesional y coherencia de precios.
+     */
+    this.products = [
+      /* ─────────────────────────────────────────────
+         1. HAMBURGUESAS
+      ───────────────────────────────────────────── */
+      {
+        id: 1,
+        name: 'Classic Bacon Burger',
+        price: 22900,
+        tag: 'Especialidad',
+        category: 'Hamburguesas',
+        description: 'Corte de res Angus 180g a la parrilla, tocineta ahumada crujiente, queso cheddar madurado, lechuga romana y aderezo artesanal de la casa en pan brioche sellado con mantequilla.',
+        image: 'assets/images/burger-classic.jpg',
+      },
+      {
+        id: 2,
+        name: 'Double Smash Burger',
+        price: 26900,
+        tag: 'Selección del Chef',
+        category: 'Hamburguesas',
+        description: 'Doble medallón fino prensado en plancha de hierro fundido, cuádruple queso cheddar fundido, cebolla confitada al vino tinto y pepinillos encurtidos en pan brioche.',
+        image: 'assets/images/burger-double.jpg',
+      },
+      {
+        id: 3,
+        name: 'Mushroom & Truffle Burger',
+        price: 28900,
+        tag: 'Gourmet',
+        category: 'Hamburguesas',
+        description: 'Champiñones portobello salteados al vino blanco con finas hierbas, queso gouda fundido, emulsión de trufa negra y rúgula fresca sobre pan artesanal.',
+        image: 'assets/images/burger-mushroom.jpg',
+      },
+      {
+        id: 4,
+        name: 'Crispy BBQ Bacon Chicken',
+        price: 23900,
+        tag: 'Crujiente',
+        category: 'Hamburguesas',
+        description: 'Suprema de pechuga de pollo rebozada con especias cajún, tocineta crocante de madera de manzano, queso monterey jack y glaseado barbacoa artesanal.',
+        image: 'assets/images/burger-chicken.jpg',
+      },
 
-  /**
-   * Busca un producto por ID en la fuente de datos autoritativa.
-   * @param {number} productId
-   * @returns {Object|undefined}
-   */
-  function _findProduct(productId) {
-    return PRODUCTS.find((p) => p.id === productId);
+      /* ─────────────────────────────────────────────
+         2. PIZZAS
+      ───────────────────────────────────────────── */
+      {
+        id: 5,
+        name: 'Pizza Margherita Di Fiori',
+        price: 28900,
+        tag: 'Tradición Napolitana',
+        category: 'Pizzas',
+        description: 'Masa de fermentación lenta de 48 horas, passata de tomates San Marzano D.O.P., mozzarella fior di latte fundida, hojas de albahaca fresca y aceite de oliva virgen extra.',
+        image: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 6,
+        name: 'Pizza Pepperoni Rústico & Hot Honey',
+        price: 32900,
+        tag: 'Contemporánea',
+        category: 'Pizzas',
+        description: 'Embutido curado artesanal de pepperoni, mozzarella hilada de búfala, orégano silvestre tostado y reducción de miel pura infusionada con chiles rojos secos.',
+        image: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 7,
+        name: 'Pizza Cuatro Quesos & Miel Trufada',
+        price: 34900,
+        tag: 'Gourmet',
+        category: 'Pizzas',
+        description: 'Equilibrio de queso gorgonzola dulce, parmigiano reggiano madurado 24 meses, fior di latte y provolone ahumado, terminado con un toque sutil de esencia de trufa blanca.',
+        image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 8,
+        name: 'Pizza Prosciutto & Rúgula Salvaje',
+        price: 36900,
+        tag: 'De Autor',
+        category: 'Pizzas',
+        description: 'Láminas finas de jamón curado prosciutto di Parma, rúgula silvestre fresca, escamas de queso grana padano y reducción balsámica tradicional de Módena.',
+        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80',
+      },
+
+      /* ─────────────────────────────────────────────
+         3. CORTES DE CARNES
+      ───────────────────────────────────────────── */
+      {
+        id: 9,
+        name: 'Bife de Chorizo Angus 350g',
+        price: 48900,
+        tag: 'Corte Selecto',
+        category: 'Cortes de Carnes',
+        description: 'Lomo ancho de res Angus con veteado uniforme y borde de grasa dorado a la brasa de quebracho blanco. Acompañado de chimichurri tradicional de finas hierbas.',
+        image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 10,
+        name: 'Ojo de Bife con Mantequilla de Romero',
+        price: 52900,
+        tag: 'Maduración 21 Días',
+        category: 'Cortes de Carnes',
+        description: 'Ribeye de máxima terneza y concentración de jugos, bañado durante el reposo en mantequilla avellanada clarificada con romero fresco y escamas de sal marina.',
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 11,
+        name: 'Costillas BBQ San Luis Horneadas 500g',
+        price: 44900,
+        tag: 'Cocción Lenta',
+        category: 'Cortes de Carnes',
+        description: 'Corte tierno de costillar de cerdo confitado al vacío durante 12 horas a baja temperatura, terminado al horno con glaseado ahumado de ciruelas negras y bourbon.',
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 12,
+        name: 'Picanha al Carbón con Chimichurri 400g',
+        price: 54900,
+        tag: 'Corte Noble',
+        category: 'Cortes de Carnes',
+        description: 'Tapa de cuadril madurada asada lentamente a la espada al calor del carbón vegetal, con costra dorada de sal marina de grano grueso y ajos confitados.',
+        image: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=600&q=80',
+      },
+
+      /* ─────────────────────────────────────────────
+         4. BEBIDAS
+      ───────────────────────────────────────────── */
+      {
+        id: 13,
+        name: 'Limonada de Coco Cremosa',
+        price: 8900,
+        tag: 'Bebida Artesanal',
+        category: 'Bebidas',
+        description: 'Extracción en frío de zumo de limón persa emulsionado con crema de coco natural sin aditivos, servido a punto de nieve con un toque sutil de panela orgánica.',
+        image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 14,
+        name: 'Soda Artesanal de Frutos Rojos & Albahaca',
+        price: 7900,
+        tag: 'Natural',
+        category: 'Bebidas',
+        description: 'Compota artesanal de moras silvestres, fresas y frambuesas con agua carbonatada mineral, perfumada con hojas frescas de albahaca morada.',
+        image: 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 15,
+        name: 'Zumo Natural de Maracuyá Silvestre',
+        price: 6900,
+        tag: '100% Fruta',
+        category: 'Bebidas',
+        description: 'Pulpa pura seleccionada de maracuyá de exportación, filtrada con delicadeza para resaltar su acidez natural equilibrada. Servido con hielo cristalino.',
+        image: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 16,
+        name: 'Té Helado Artesanal al Limón Mandarino',
+        price: 6500,
+        tag: 'Infusión Fría',
+        category: 'Bebidas',
+        description: 'Infusión en frío de hojas selectas de té negro Ceilán con cáscaras confitadas de naranja dulce, zumo de limón mandarino fresco y menta crespa.',
+        image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80',
+      },
+
+      /* ─────────────────────────────────────────────
+         5. CÓCTELES
+      ───────────────────────────────────────────── */
+      {
+        id: 17,
+        name: 'Gin Tonic Botánico de Frutos Silvestres',
+        price: 24900,
+        tag: 'Coctelería de Autor',
+        category: 'Cócteles',
+        description: 'Ginebra destilada premium aromatizada con bayas de enebro, infusión artesanal de frutos del bosque, agua tónica botánica y un twist de pomelo rosado.',
+        image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 18,
+        name: 'Moscow Mule en Taza de Cobre',
+        price: 23900,
+        tag: 'Clásico de Barra',
+        category: 'Cócteles',
+        description: 'Vodka destilado en alambique de cobre, cerveza de jengibre artesanal con notas picantes, zumo recién exprimido de lima y ramillete aromático de menta fresca.',
+        image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 19,
+        name: 'Aperol Spritz Veneciano',
+        price: 25900,
+        tag: 'Aperitivo Italiano',
+        category: 'Cócteles',
+        description: 'Aperol italiano de etiqueta original, vino espumoso Prosecco D.O.C. extra dry, un toque de soda premium carbonatada y rodaja de naranja fresca.',
+        image: 'https://images.unsplash.com/photo-1560512823-829485b8bf24?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 20,
+        name: 'Mojito Artesanal de Ron Añejo',
+        price: 21900,
+        tag: 'Clásico',
+        category: 'Cócteles',
+        description: 'Ron añejado en barrica de roble blanco, hierbabuena fresca palmeada para liberar aceites esenciales, azúcar de caña morena y zumo natural de lima verde.',
+        image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=80',
+      },
+
+      /* ─────────────────────────────────────────────
+         6. PREPARACIONES ARTESANALES (Renombrada)
+      ───────────────────────────────────────────── */
+      {
+        id: 21,
+        name: 'Papas Rústicas Trufadas al Parmesano',
+        price: 18900,
+        tag: 'Guarnición de Autor',
+        category: 'Preparaciones Artesanales',
+        description: 'Papas nativas cortadas en gruesos gajos dorados con piel, aromatizadas con aceite virgen de trufa blanca de Piamonte, lluvia de queso Parmigiano Reggiano y perejil fresco.',
+        image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 22,
+        name: 'Gratinado Dauphinoise con Gruyère',
+        price: 21900,
+        tag: 'Cocina Francesa',
+        category: 'Preparaciones Artesanales',
+        description: 'Finas láminas de papa pastusa confitadas lentamente al horno en crema infusionada con nuez moscada y ajo suave, gratinadas con abundante queso suizo Gruyère A.O.P.',
+        image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 23,
+        name: 'Papas Bravas Rústicas con Alioli Casero',
+        price: 16900,
+        tag: 'Tapa Clásica',
+        category: 'Preparaciones Artesanales',
+        description: 'Cubos de papa tierna por dentro y crocantes por fuera, servidos con salsa brava ahumada elaborada con pimentón de la Vera dulce y alioli ligero de ajo confitado.',
+        image: 'https://images.unsplash.com/photo-1585109649139-366815a0d713?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 24,
+        name: 'Milhojas de Papa Crocante con Panceta',
+        price: 19900,
+        tag: 'Alta Técnica',
+        category: 'Preparaciones Artesanales',
+        description: 'Terrina artesanal prensada de 30 capas milimétricas de papa doradas a fuego suave con mantequilla noisette, crocante de panceta ahumada y dip de crema agria con cebollino.',
+        image: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?auto=format&fit=crop&w=600&q=80',
+      },
+
+      /* ─────────────────────────────────────────────
+         7. ASIÁTICO (Sushi, Salmón, Bowls)
+      ───────────────────────────────────────────── */
+      {
+        id: 25,
+        name: 'Salmón Roll Especial con Masago (10 bocados)',
+        price: 32900,
+        tag: 'Pesca Fresca',
+        category: 'Asiático',
+        description: 'Rollo uramaki relleno de salmón fresco noruego, queso philadelphia y aguacate Hass seleccionado, envuelto en finas láminas de salmón flameado al soplete con perlas de masago.',
+        image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 26,
+        name: 'Tartar de Salmón & Atún con Sésamo Tostado',
+        price: 36900,
+        tag: 'Crudo Premium',
+        category: 'Asiático',
+        description: 'Dados frescos de lomo de salmón y atún rojo marinados en vinagreta ponzu de yuzu, aceite de sésamo tostado, cebollino fresco picado y base cremosa de aguacate.',
+        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 27,
+        name: 'Poké Bowl de Salmón Marinado & Edamame',
+        price: 34900,
+        tag: 'Plato Balanceado',
+        category: 'Asiático',
+        description: 'Base de arroz shari aderezado, cubos generosos de salmón marinado con jengibre fresco, habas de edamame al vapor, ensalada wakame, mango maduro y aderezo spicy japonés.',
+        image: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=600&q=80',
+      },
+      {
+        id: 28,
+        name: 'Ebi Crunch Roll con Langostinos Tempura (10 bocados)',
+        price: 29900,
+        tag: 'Crocante',
+        category: 'Asiático',
+        description: 'Langostinos crocantes apanados en panko japonés tradicional, espárragos verdes blanqueados y queso crema, cubiertos con hebras crocantes de masa tempura y salsa dulce de anguila.',
+        image: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=600&q=80',
+      },
+    ];
+
+    /** @type {Map<number, {product: Object, quantity: number}>} */
+    this.cart = new Map();
+
+    /** Modalidad de pago seleccionada: 'cash' o 'transfer' */
+    this.paymentMethod = 'cash';
+
+    /** Costo oficial de transporte */
+    this.shippingCost = SHIPPING_COST;
   }
 
-  /**
-   * Añade un ítem al carrito. Si ya existe, incrementa la cantidad.
-   * @param {number} productId
-   * @returns {boolean} true si se añadió con éxito.
-   */
-  function addItem(productId) {
-    const product = _findProduct(productId);
-    if (!product) {
-      console.warn(`[CartModel] Producto con id "${productId}" no encontrado.`);
-      return false;
-    }
-    if (items.has(productId)) {
-      const current = items.get(productId);
-      items.set(productId, { product, quantity: current.quantity + 1 });
+  getProducts() {
+    return this.products;
+  }
+
+  getCategories() {
+    return [...new Set(this.products.map((p) => p.category))];
+  }
+
+  findProduct(productId) {
+    return this.products.find((p) => p.id === productId);
+  }
+
+  addItem(productId) {
+    const product = this.findProduct(productId);
+    if (!product) return false;
+
+    if (this.cart.has(productId)) {
+      const current = this.cart.get(productId);
+      this.cart.set(productId, { product, quantity: current.quantity + 1 });
     } else {
-      items.set(productId, { product, quantity: 1 });
+      this.cart.set(productId, { product, quantity: 1 });
     }
     return true;
   }
 
-  /**
-   * Decrementa la cantidad. Si llega a 0, elimina el ítem.
-   * @param {number} productId
-   */
-  function decrementItem(productId) {
-    if (!items.has(productId)) return;
-    const current = items.get(productId);
+  decrementItem(productId) {
+    if (!this.cart.has(productId)) return;
+    const current = this.cart.get(productId);
     if (current.quantity <= 1) {
-      items.delete(productId);
+      this.cart.delete(productId);
     } else {
-      items.set(productId, { ...current, quantity: current.quantity - 1 });
+      this.cart.set(productId, { ...current, quantity: current.quantity - 1 });
     }
   }
 
-  /**
-   * Elimina un ítem completamente del carrito.
-   * @param {number} productId
-   */
-  function removeItem(productId) {
-    items.delete(productId);
+  removeItem(productId) {
+    this.cart.delete(productId);
   }
 
-  /**
-   * Calcula el total de ítems (suma de cantidades).
-   * @returns {number}
-   */
-  function getTotalCount() {
+  getTotalCount() {
     let count = 0;
-    items.forEach(({ quantity }) => { count += quantity; });
+    this.cart.forEach(({ quantity }) => {
+      count += quantity;
+    });
     return count;
   }
 
-  /**
-   * Calcula el subtotal (precio siempre desde el model, nunca del DOM).
-   * @returns {number}
-   */
-  function getSubtotal() {
-    let total = 0;
-    items.forEach(({ product, quantity }) => {
-      // Validación defensiva: la cantidad DEBE ser entero positivo
+  getSubtotal() {
+    let subtotal = 0;
+    this.cart.forEach(({ product, quantity }) => {
       const validQty = Number.isInteger(quantity) && quantity > 0 ? quantity : 0;
-      total += product.price * validQty;
+      subtotal += product.price * validQty;
     });
-    return total;
+    return subtotal;
   }
 
-  /**
-   * Retorna los ítems del carrito como array para el View.
-   * @returns {Array<{product: Object, quantity: number}>}
-   */
-  function getItems() {
-    return Array.from(items.values());
+  getShippingCost() {
+    return this.shippingCost;
   }
 
-  /** ¿El carrito está vacío? */
-  function isEmpty() {
-    return items.size === 0;
+  getTotal() {
+    if (this.isEmpty()) return 0;
+    return this.getSubtotal() + this.getShippingCost();
   }
 
-  /** Limpia el carrito */
-  function clear() {
-    items.clear();
+  getPaymentMethod() {
+    return this.paymentMethod;
   }
 
-  return { addItem, decrementItem, removeItem, getTotalCount, getSubtotal, getItems, isEmpty, clear };
-})();
+  setPaymentMethod(method) {
+    if (method === 'cash' || method === 'transfer') {
+      this.paymentMethod = method;
+    }
+  }
+
+  getItems() {
+    return Array.from(this.cart.values());
+  }
+
+  isEmpty() {
+    return this.cart.size === 0;
+  }
+
+  clear() {
+    this.cart.clear();
+  }
+}
+
+// Instancia única del Modelo
+const storeModel = new StoreModel();
+
+// Alias para compatibilidad hacia atrás
+const CartModel = storeModel;
+const PRODUCTS = storeModel.products;
 
 /* ============================================================
-   ██    ██ ██ ███████ ██     ██
-   ██    ██ ██ ██      ██     ██
-   ██    ██ ██ █████   ██  █  ██
-    ██  ██  ██ ██      ██ ███ ██
-     ████   ██ ███████  ███ ███
-
-   VIEW — renderiza el DOM y expone callbacks para el Controller.
-   - Usa textContent / createElement (NUNCA innerHTML para datos).
+   2. VISTA (StoreView)
+   Renderizado dinámico de categorías, navegación sticky y orden
    ============================================================ */
 
-const AppView = (() => {
-  /* ─── Elementos del DOM (cacheados en init) ─── */
+const StoreView = (() => {
   const el = {};
 
-  /** Inicializa referencias a los nodos del DOM */
+  // Estado interno para el Scroll Spy
+  let _observer = null;
+  const _categoryRatios = new Map();
+  let _isClickScrolling = false;
+  let _clickScrollTimer = null;
+  let _scrollRafId = null;
+
   function init() {
-    el.productGrid    = document.getElementById('product-grid');
-    el.cartOverlay    = document.getElementById('cart-overlay');
-    el.cartDrawer     = document.getElementById('cart-drawer');
-    el.btnCartOpen    = document.getElementById('btn-cart-open');
-    el.btnCartClose   = document.getElementById('btn-cart-close');
-    el.cartCount      = document.getElementById('cart-count');
-    el.cartItems      = document.getElementById('cart-items');
-    el.cartEmpty      = document.getElementById('cart-empty');
-    el.cartSummary    = document.getElementById('cart-summary');
-    el.cartSubtotal   = document.getElementById('cart-subtotal');
-    el.cartTotal      = document.getElementById('cart-total');
-    el.checkoutForm   = document.getElementById('checkout-form');
-    el.inputName      = document.getElementById('input-name');
-    el.inputAddress   = document.getElementById('input-address');
-    el.inputNotes     = document.getElementById('input-notes');
-    el.errorName      = document.getElementById('error-name');
-    el.errorAddress   = document.getElementById('error-address');
+    el.productGrid       = document.getElementById('product-grid');
+    el.categoryNavbar    = document.getElementById('category-navbar');
+    el.categoryNavList   = document.getElementById('category-nav-list');
+    el.siteHeader        = document.querySelector('.site-header');
+    el.catalogSection    = document.getElementById('catalog');
+    el.cartOverlay       = document.getElementById('cart-overlay');
+    el.cartDrawer        = document.getElementById('cart-drawer');
+    el.btnCartOpen       = document.getElementById('btn-cart-open');
+    el.btnCartClose      = document.getElementById('btn-cart-close');
+    el.cartCount         = document.getElementById('cart-count');
+    el.cartItems         = document.getElementById('cart-items');
+    el.cartEmpty         = document.getElementById('cart-empty');
+    el.cartContent       = document.getElementById('cart-content');
+    el.cartSummary       = document.getElementById('cart-summary');
+    el.cartSubtotal      = document.getElementById('cart-subtotal');
+    el.cartShipping      = document.getElementById('cart-shipping');
+    el.cartTotal         = document.getElementById('cart-total');
+    el.checkoutForm      = document.getElementById('checkout-form');
+    el.inputName         = document.getElementById('input-name');
+    el.inputAddress      = document.getElementById('input-address');
+    el.inputNotes        = document.getElementById('input-notes');
+    el.errorName         = document.getElementById('error-name');
+    el.errorAddress      = document.getElementById('error-address');
+    el.paymentTabs       = document.querySelectorAll('.payment-tab');
+    el.transferInfoBox   = document.getElementById('transfer-info');
+    el.btnEmptyBrowse    = document.getElementById('btn-empty-browse');
+    el.copyButtons       = document.querySelectorAll('.btn-copy-compact');
+
+    _initCopyButtons();
+
+    if (el.btnEmptyBrowse) {
+      el.btnEmptyBrowse.addEventListener('click', () => {
+        closeCart();
+      });
+    }
+  }
+
+  /** Genera identificador seguro para anclaje a partir del nombre de categoría */
+  function _slugify(text) {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 
   /* ─────────────────────────────────────────────
-     RENDERIZADO DEL CATÁLOGO
+     BARRA STICKY DE NAVEGACIÓN DE CATEGORÍAS
   ───────────────────────────────────────────── */
 
   /**
-   * Renderiza todas las tarjetas de producto en el grid.
-   * Usa createElement — NUNCA innerHTML para datos del array.
-   * @param {Object[]} products
-   * @param {Function} onAddToCart - callback(productId)
+   * Renderiza dinámicamente los botones de categorías en la barra de navegación superior.
+   * Al hacer clic, ejecuta un scroll suave hasta la sección correspondiente.
+   *
+   * @param {string[]} categories - Lista de categorías únicas
    */
-  function renderCatalog(products, onAddToCart) {
-    el.productGrid.textContent = ''; // Limpiar
+  function renderCategoryNavbar(categories) {
+    if (!el.categoryNavList) return;
+    el.categoryNavList.textContent = '';
 
-    products.forEach((product) => {
-      const article = _createProductCard(product, onAddToCart);
-      el.productGrid.appendChild(article);
+    categories.forEach((categoryName, index) => {
+      const slug = _slugify(categoryName);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = index === 0 ? 'category-nav-btn active' : 'category-nav-btn';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+      btn.dataset.targetId = `cat-section-${slug}`;
+      btn.textContent = categoryName;
+
+      btn.addEventListener('click', () => {
+        _scrollToCategory(slug);
+        _setActiveNavButton(btn);
+      });
+
+      el.categoryNavList.appendChild(btn);
     });
   }
 
+  function _scrollToCategory(slug) {
+    const targetEl = document.getElementById(`cat-section-${slug}`);
+    if (!targetEl) return;
+
+    _isClickScrolling = true;
+    if (_clickScrollTimer) clearTimeout(_clickScrollTimer);
+
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Restablece el flag después de que concluye la transición de scroll suave
+    _clickScrollTimer = setTimeout(() => {
+      _isClickScrolling = false;
+    }, 850);
+  }
+
+  function _setActiveNavButton(activeBtn) {
+    if (!el.categoryNavList || !activeBtn) return;
+    const allBtns = el.categoryNavList.querySelectorAll('.category-nav-btn');
+    let changed = false;
+
+    allBtns.forEach((btn) => {
+      const isCurrent = btn === activeBtn;
+      if (btn.classList.contains('active') !== isCurrent) {
+        btn.classList.toggle('active', isCurrent);
+        btn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+        changed = true;
+      }
+    });
+
+    // Desplazamiento horizontal automático del navbar si el botón activo queda oculto en móvil
+    if (changed) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     SCROLL SPY AVANZADO CON INTERSECTION OBSERVER
+  ───────────────────────────────────────────── */
+
   /**
-   * Crea el nodo DOM de una tarjeta de producto.
-   * @private
+   * Configura IntersectionObserver observando todas las secciones completas (.category-section).
+   * Monitorea la proporción de visibilidad y activa la categoría predominante en tiempo real.
+   */
+  function _setupScrollObserver() {
+    const sections = document.querySelectorAll('.category-section');
+    if (sections.length === 0) return;
+
+    if (_observer) {
+      _observer.disconnect();
+    }
+    _categoryRatios.clear();
+
+    const headerHeight = el.siteHeader ? el.siteHeader.offsetHeight : 72;
+    const navHeight = el.categoryNavbar ? el.categoryNavbar.offsetHeight : 58;
+    const topOffset = headerHeight + navHeight;
+
+    // Configuración precisa del área activa de observación
+    const observerOptions = {
+      root: null,
+      // Descuenta el espacio ocupado por header y barra de categorías superior
+      rootMargin: `-${topOffset + 12}px 0px -40% 0px`,
+      threshold: [0, 0.05, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0],
+    };
+
+    _observer = new IntersectionObserver((entries) => {
+      if (_isClickScrolling) return;
+
+      entries.forEach((entry) => {
+        _categoryRatios.set(
+          entry.target.id,
+          entry.isIntersecting ? entry.intersectionRatio : 0
+        );
+      });
+
+      // Detectar cuál de las secciones tiene mayor porcentaje de visibilidad en el viewport
+      let dominantId = null;
+      let maxRatio = 0;
+
+      _categoryRatios.forEach((ratio, id) => {
+        if (ratio > maxRatio) {
+          maxRatio = ratio;
+          dominantId = id;
+        }
+      });
+
+      if (dominantId && maxRatio > 0) {
+        const targetBtn = el.categoryNavList.querySelector(`[data-target-id="${dominantId}"]`);
+        if (targetBtn) {
+          _setActiveNavButton(targetBtn);
+        }
+      }
+    }, observerOptions);
+
+    sections.forEach((sec) => _observer.observe(sec));
+
+    // Listener de scroll coordinado para cambios rápidos de posición y límites de página
+    _setupScrollCoordinator(topOffset);
+  }
+
+  function _setupScrollCoordinator(topOffset) {
+    window.removeEventListener('scroll', _onWindowScroll);
+    window.addEventListener('scroll', _onWindowScroll, { passive: true });
+  }
+
+  function _onWindowScroll() {
+    if (_isClickScrolling) return;
+
+    if (_scrollRafId) cancelAnimationFrame(_scrollRafId);
+
+    _scrollRafId = requestAnimationFrame(() => {
+      const scrollY = window.scrollY || window.pageYOffset;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+      const allBtns = el.categoryNavList ? el.categoryNavList.querySelectorAll('.category-nav-btn') : [];
+      if (allBtns.length === 0) return;
+
+      // 1. Llegada al extremo inferior de la página -> activar última categoría
+      if (scrollY + windowHeight >= docHeight - 35) {
+        _setActiveNavButton(allBtns[allBtns.length - 1]);
+        return;
+      }
+
+      // 2. Extremo superior antes de la primera categoría -> activar primera categoría
+      const catalogEl = el.catalogSection || document.getElementById('catalog');
+      const headerOffset = (el.siteHeader?.offsetHeight || 72) + (el.categoryNavbar?.offsetHeight || 58);
+      if (catalogEl && scrollY < catalogEl.offsetTop - headerOffset) {
+        _setActiveNavButton(allBtns[0]);
+        return;
+      }
+
+      // 3. Verificación de precisión geométrica de la sección activa
+      const sections = document.querySelectorAll('.category-section');
+      const triggerY = headerOffset + 40;
+      let activeSec = null;
+
+      sections.forEach((sec) => {
+        const rect = sec.getBoundingClientRect();
+        if (rect.top <= triggerY && rect.bottom > triggerY) {
+          activeSec = sec;
+        }
+      });
+
+      if (activeSec) {
+        const targetBtn = el.categoryNavList.querySelector(`[data-target-id="${activeSec.id}"]`);
+        if (targetBtn) {
+          _setActiveNavButton(targetBtn);
+        }
+      }
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDERIZADO DEL CATÁLOGO AGRUPADO POR CATEGORÍAS
+  ───────────────────────────────────────────── */
+
+  /**
+   * Agrupa los productos por su propiedad 'category' y los renderiza en #product-grid
+   * creando una sección contenedora (.category-section) para cada categoría completa.
+   *
+   * @param {Object[]} products - Lista completa de productos
+   * @param {Function} onAddToCart - Callback al presionar agregar
+   */
+  function renderProducts(products, onAddToCart) {
+    if (!el.productGrid) return;
+    el.productGrid.textContent = '';
+
+    // Agrupar productos por categoría
+    const grouped = {};
+    products.forEach((product) => {
+      const cat = product.category || 'Especialidades';
+      if (!grouped[cat]) {
+        grouped[cat] = [];
+      }
+      grouped[cat].push(product);
+    });
+
+    const categoryNames = Object.keys(grouped);
+
+    categoryNames.forEach((catName) => {
+      const catProducts = grouped[catName];
+      const slug = _slugify(catName);
+
+      // Sección contenedora completa de la categoría (Header + Cards)
+      const section = document.createElement('section');
+      section.className = 'category-section';
+      section.id = `cat-section-${slug}`;
+      section.setAttribute('aria-label', catName);
+
+      // Encabezado de la categoría
+      const categoryHeader = document.createElement('div');
+      categoryHeader.className = 'category-header-wrap';
+
+      const title = document.createElement('h2');
+      title.className = 'category-title';
+      title.textContent = catName;
+
+      const counter = document.createElement('span');
+      counter.className = 'category-count';
+      counter.textContent = `${catProducts.length} Variedades`;
+
+      categoryHeader.appendChild(title);
+      categoryHeader.appendChild(counter);
+      section.appendChild(categoryHeader);
+
+      // Rejilla de tarjetas de productos de esta categoría
+      const cardsGrid = document.createElement('div');
+      cardsGrid.className = 'product-grid';
+
+      catProducts.forEach((product) => {
+        const article = _createProductCard(product, onAddToCart);
+        cardsGrid.appendChild(article);
+      });
+
+      section.appendChild(cardsGrid);
+      el.productGrid.appendChild(section);
+    });
+
+    // Inicializar el Scroll Spy con Intersection Observer
+    _setupScrollObserver();
+  }
+
+  /**
+   * Crea la tarjeta de producto con diseño corporativo y elegante
    */
   function _createProductCard(product, onAddToCart) {
-    // Contenedor principal
     const article = document.createElement('article');
     article.className = 'product-card';
     article.setAttribute('role', 'listitem');
     article.dataset.productId = product.id;
 
-    // Badge (si existe)
-    if (product.badge) {
-      const badge = document.createElement('span');
-      badge.className = `product-badge product-badge--${product.badge}`;
-      badge.textContent = product.badgeText; // textContent — safe
-      article.appendChild(badge);
-    }
-
-    // Imagen wrapper
+    // Contenedor de Imagen
     const imgWrapper = document.createElement('div');
     imgWrapper.className = 'product-img-wrapper';
 
+    const fallbackSvg = _getCorporateFallbackSvg(product.name);
+
     const img = document.createElement('img');
     img.className = 'product-img';
-    img.src = product.image;
-    img.alt = product.name; // alt text from model — safe
+    img.src = product.image || fallbackSvg;
+    img.alt = product.name;
     img.loading = 'lazy';
     img.decoding = 'async';
     img.width = 400;
     img.height = 300;
-    // Fallback si la imagen no carga
     img.onerror = () => {
-      img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23242220'/%3E%3Ctext x='50%25' y='50%25' fill='%23a89b8c' text-anchor='middle' dominant-baseline='middle' font-size='48'%3E🍔%3C/text%3E%3C/svg%3E";
+      img.onerror = null;
+      img.src = fallbackSvg;
     };
 
     imgWrapper.appendChild(img);
     article.appendChild(imgWrapper);
 
-    // Info section
+    // Información del Producto
     const info = document.createElement('div');
     info.className = 'product-info';
 
+    if (product.tag) {
+      const tagEl = document.createElement('span');
+      tagEl.className = 'product-tag';
+      tagEl.textContent = product.tag;
+      info.appendChild(tagEl);
+    }
+
     const name = document.createElement('h3');
-    name.className = 'product-name';
-    name.textContent = product.name; // safe
+    name.className = 'product-name product-title';
+    name.textContent = product.name;
 
     const desc = document.createElement('p');
     desc.className = 'product-description';
-    desc.textContent = product.description; // safe
+    desc.textContent = product.description || '';
 
     const footer = document.createElement('div');
     footer.className = 'product-footer';
 
     const price = document.createElement('span');
     price.className = 'product-price';
-    price.textContent = _formatPrice(product.price); // safe
+    price.textContent = _formatPrice(product.price);
 
     const addBtn = document.createElement('button');
     addBtn.className = 'btn-add-to-cart';
     addBtn.type = 'button';
-    addBtn.setAttribute('aria-label', `Añadir ${product.name} al carrito`);
+    addBtn.setAttribute('aria-label', `Agregar ${product.name} a la orden`);
     addBtn.dataset.productId = product.id;
 
-    // Icono + texto del botón
-    const plusSpan = document.createElement('span');
-    plusSpan.textContent = '+';
-    plusSpan.setAttribute('aria-hidden', 'true');
     const btnText = document.createElement('span');
-    btnText.textContent = 'Añadir';
-
-    addBtn.appendChild(plusSpan);
+    btnText.textContent = 'Añadir a la orden';
     addBtn.appendChild(btnText);
 
-    // Evento — datos tomados desde dataset (id), precio del model
     addBtn.addEventListener('click', () => {
       const idFromDom = parseInt(addBtn.dataset.productId, 10);
-      // Validación: asegurar que el ID es un número positivo válido
-      if (!Number.isInteger(idFromDom) || idFromDom <= 0) {
-        console.error('[AppView] Product ID inválido en el DOM:', addBtn.dataset.productId);
-        return;
-      }
+      if (!Number.isInteger(idFromDom) || idFromDom <= 0) return;
+
       onAddToCart(idFromDom);
-      // Feedback visual temporal
+
       addBtn.classList.add('added');
-      btnText.textContent = '¡Añadido!';
+      btnText.textContent = 'Añadido';
       setTimeout(() => {
         addBtn.classList.remove('added');
-        btnText.textContent = 'Añadir';
+        btnText.textContent = 'Añadir a la orden';
       }, 1000);
     });
 
     footer.appendChild(price);
     footer.appendChild(addBtn);
+
     info.appendChild(name);
-    info.appendChild(desc);
+    if (product.description) {
+      info.appendChild(desc);
+    }
     info.appendChild(footer);
+
     article.appendChild(info);
 
     return article;
   }
 
+  /** Fallback SVG corporativo y geométrico sin emojis */
+  function _getCorporateFallbackSvg(name) {
+    const encodedTitle = encodeURIComponent((name || 'QUICKSYNC').substring(0, 24).toUpperCase());
+    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23F4F4F5'/%3E%3Ctext x='50%25' y='46%25' font-family='sans-serif' font-weight='700' font-size='16' letter-spacing='0.16em' fill='%2352525B' text-anchor='middle'%3E${encodedTitle}%3C/text%3E%3Ctext x='50%25' y='58%25' font-family='sans-serif' font-weight='600' font-size='11' letter-spacing='0.22em' fill='%23A1A1AA' text-anchor='middle'%3EALTA COCINA%3C/text%3E%3C/svg%3E`;
+  }
+
+  function _getCartFallbackSvg() {
+    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Crect width='72' height='72' rx='10' fill='%23F4F4F5'/%3E%3Ctext x='50%25' y='55%25' font-family='sans-serif' font-weight='700' font-size='15' fill='%23111827' text-anchor='middle'%3EQS%3C/text%3E%3C/svg%3E`;
+  }
+
   /* ─────────────────────────────────────────────
-     RENDERIZADO DEL CARRITO
+     RENDERIZADO DEL PANEL LATERAL DE LA ORDEN
   ───────────────────────────────────────────── */
 
-  /**
-   * Actualiza todo el panel del carrito.
-   * @param {Array}  items      - array de {product, quantity}
-   * @param {number} subtotal
-   * @param {Function} onIncrement - callback(productId)
-   * @param {Function} onDecrement - callback(productId)
-   */
-  function renderCart(items, subtotal, onIncrement, onDecrement) {
-    el.cartItems.textContent = ''; // Limpiar
+  function renderCart(items, subtotal, shippingCost, total, onIncrement, onDecrement) {
+    if (!el.cartItems) return;
+    el.cartItems.textContent = '';
 
     const isEmpty = items.length === 0;
 
-    // Estado vacío / lleno
-    el.cartEmpty.setAttribute('aria-hidden', !isEmpty);
-    el.cartEmpty.style.display  = isEmpty ? 'flex' : 'none';
-    el.cartItems.style.display  = isEmpty ? 'none' : 'flex';
-    el.cartSummary.setAttribute('aria-hidden', isEmpty);
-    el.cartSummary.style.display  = isEmpty ? 'none' : 'flex';
-    el.checkoutForm.setAttribute('aria-hidden', isEmpty);
-    el.checkoutForm.style.display = isEmpty ? 'none' : 'flex';
+    if (el.cartEmpty) {
+      el.cartEmpty.setAttribute('aria-hidden', !isEmpty);
+      el.cartEmpty.style.display = isEmpty ? 'flex' : 'none';
+    }
+
+    if (el.cartContent) {
+      el.cartContent.style.display = isEmpty ? 'none' : 'flex';
+    }
 
     if (isEmpty) return;
 
@@ -418,46 +863,40 @@ const AppView = (() => {
       el.cartItems.appendChild(itemEl);
     });
 
-    // Totals — precio siempre del model
-    el.cartSubtotal.textContent = _formatPrice(subtotal);
-    el.cartTotal.textContent    = _formatPrice(subtotal); // aquí se puede añadir envío
+    if (el.cartSubtotal) el.cartSubtotal.textContent = _formatPrice(subtotal);
+    if (el.cartShipping) el.cartShipping.textContent = _formatPrice(shippingCost);
+    if (el.cartTotal) el.cartTotal.textContent = _formatPrice(total);
   }
 
-  /**
-   * Crea el nodo DOM de un ítem del carrito.
-   * @private
-   */
   function _createCartItem(product, quantity, onIncrement, onDecrement) {
     const item = document.createElement('div');
     item.className = 'cart-item';
     item.setAttribute('role', 'listitem');
     item.dataset.productId = product.id;
 
-    // Imagen miniatura
+    // Miniatura
     const img = document.createElement('img');
     img.className = 'cart-item-img';
-    img.src = product.image;
-    img.alt = product.name; // safe
+    const fallback = _getCartFallbackSvg();
+    img.src = product.image || fallback;
+    img.alt = product.name;
     img.loading = 'lazy';
-    img.width = 56;
-    img.height = 56;
-    img.onerror = () => { img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Crect width='56' height='56' fill='%23242220'/%3E%3Ctext x='50%25' y='50%25' fill='%23a89b8c' text-anchor='middle' dominant-baseline='middle' font-size='28'%3E🍔%3C/text%3E%3C/svg%3E"; };
+    img.width = 68;
+    img.height = 68;
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = fallback;
+    };
 
-    // Info
-    const infoDiv = document.createElement('div');
-    infoDiv.className = 'cart-item-info';
-
+    // Nombre
     const nameEl = document.createElement('p');
     nameEl.className = 'cart-item-name';
-    nameEl.textContent = product.name; // safe
+    nameEl.textContent = product.name;
 
+    // Precio unitario x cantidad
     const priceEl = document.createElement('p');
     priceEl.className = 'cart-item-price';
-    // Precio unitario * cantidad (del model)
-    priceEl.textContent = `${_formatPrice(product.price)} × ${quantity}`;
-
-    infoDiv.appendChild(nameEl);
-    infoDiv.appendChild(priceEl);
+    priceEl.textContent = `${_formatPrice(product.price)} x ${quantity}`;
 
     // Controles de cantidad
     const qtyDiv = document.createElement('div');
@@ -465,32 +904,29 @@ const AppView = (() => {
 
     const btnMinus = document.createElement('button');
     btnMinus.type = 'button';
-    // Si la cantidad es 1, el botón menos elimina el producto (feedback con ícono diferente)
     btnMinus.className = quantity === 1 ? 'btn-qty btn-qty--delete' : 'btn-qty';
     btnMinus.textContent = quantity === 1 ? '✕' : '−';
     btnMinus.setAttribute(
       'aria-label',
-      quantity === 1 ? `Eliminar ${product.name} del carrito` : `Reducir cantidad de ${product.name}`
+      quantity === 1 ? `Eliminar ${product.name} de la orden` : `Reducir cantidad de ${product.name}`
     );
     btnMinus.addEventListener('click', () => {
       const id = parseInt(item.dataset.productId, 10);
-      if (!Number.isInteger(id) || id <= 0) return;
-      onDecrement(id);
+      if (Number.isInteger(id)) onDecrement(id);
     });
 
     const qtySpan = document.createElement('span');
     qtySpan.className = 'qty-value';
-    qtySpan.textContent = quantity; // safe (number)
+    qtySpan.textContent = quantity;
 
     const btnPlus = document.createElement('button');
     btnPlus.type = 'button';
     btnPlus.className = 'btn-qty';
     btnPlus.textContent = '+';
-    btnPlus.setAttribute('aria-label', `Añadir más ${product.name}`);
+    btnPlus.setAttribute('aria-label', `Añadir otra unidad de ${product.name}`);
     btnPlus.addEventListener('click', () => {
       const id = parseInt(item.dataset.productId, 10);
-      if (!Number.isInteger(id) || id <= 0) return;
-      onIncrement(id);
+      if (Number.isInteger(id)) onIncrement(id);
     });
 
     qtyDiv.appendChild(btnMinus);
@@ -498,35 +934,94 @@ const AppView = (() => {
     qtyDiv.appendChild(btnPlus);
 
     item.appendChild(img);
-    item.appendChild(infoDiv);
+    item.appendChild(nameEl);
+    item.appendChild(priceEl);
     item.appendChild(qtyDiv);
 
     return item;
   }
 
   /* ─────────────────────────────────────────────
-     ACTUALIZACIÓN DEL CONTADOR DEL HEADER
+     GESTIÓN DE MODALIDADES DE PAGO Y COPIADO
   ───────────────────────────────────────────── */
 
-  /**
-   * Actualiza el badge de cantidad visible en el botón del carrito.
-   * @param {number} count
-   */
-  function updateCartCount(count) {
-    // Validación: solo enteros no negativos
-    const safeCount = Number.isInteger(count) && count >= 0 ? count : 0;
-    el.cartCount.textContent = safeCount;
+  function updatePaymentMethodView(selectedMethod) {
+    el.paymentTabs.forEach((tab) => {
+      const input = tab.querySelector('input[type="radio"]');
+      if (input && input.value === selectedMethod) {
+        tab.classList.add('selected');
+        input.checked = true;
+      } else {
+        tab.classList.remove('selected');
+        if (input) input.checked = false;
+      }
+    });
 
-    // Animación bump
-    el.cartCount.classList.remove('bump');
-    // Forzar reflow para reiniciar la animación
-    void el.cartCount.offsetWidth;
-    el.cartCount.classList.add('bump');
+    if (el.transferInfoBox) {
+      el.transferInfoBox.style.display = selectedMethod === 'transfer' ? 'block' : 'none';
+    }
   }
 
-  /* ─────────────────────────────────────────────
-     APERTURA / CIERRE DEL DRAWER
-  ───────────────────────────────────────────── */
+  function _initCopyButtons() {
+    el.copyButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const textToCopy = btn.getAttribute('data-copy');
+        if (!textToCopy) return;
+
+        _copyToClipboard(textToCopy, btn);
+      });
+    });
+  }
+
+  function _copyToClipboard(text, btnElement) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        _handleCopySuccess(btnElement);
+      }).catch(() => {
+        _fallbackCopy(text, btnElement);
+      });
+    } else {
+      _fallbackCopy(text, btnElement);
+    }
+  }
+
+  function _fallbackCopy(text, btnElement) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+      document.execCommand('copy');
+      _handleCopySuccess(btnElement);
+    } catch (e) {
+      showToast('Dato copiado manualmente: ' + text);
+    }
+    document.body.removeChild(tempInput);
+  }
+
+  function _handleCopySuccess(btnElement) {
+    const labelEl = btnElement.querySelector('.copy-label');
+    const originalText = labelEl ? labelEl.textContent : 'Copiar';
+
+    btnElement.classList.add('copied');
+    if (labelEl) labelEl.textContent = 'Copiado';
+    showToast('Información copiada al portapapeles');
+
+    setTimeout(() => {
+      btnElement.classList.remove('copied');
+      if (labelEl) labelEl.textContent = originalText;
+    }, 2000);
+  }
+
+  function updateCartCount(count) {
+    const safeCount = Number.isInteger(count) && count >= 0 ? count : 0;
+    if (el.cartCount) {
+      el.cartCount.textContent = safeCount;
+      el.cartCount.classList.remove('bump');
+      void el.cartCount.offsetWidth;
+      el.cartCount.classList.add('bump');
+    }
+  }
 
   function openCart() {
     el.cartDrawer.classList.add('open');
@@ -534,8 +1029,7 @@ const AppView = (() => {
     el.cartDrawer.setAttribute('aria-hidden', 'false');
     el.cartOverlay.setAttribute('aria-hidden', 'false');
     el.btnCartOpen.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden'; // Prevenir scroll del body
-    // Mover foco al botón de cierre
+    document.body.style.overflow = 'hidden';
     el.btnCartClose.focus();
   }
 
@@ -546,44 +1040,26 @@ const AppView = (() => {
     el.cartOverlay.setAttribute('aria-hidden', 'true');
     el.btnCartOpen.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
-    el.btnCartOpen.focus(); // Devolver foco al trigger
+    el.btnCartOpen.focus();
   }
 
-  /* ─────────────────────────────────────────────
-     VALIDACIÓN VISUAL DEL FORMULARIO
-  ───────────────────────────────────────────── */
-
-  /**
-   * Muestra o limpia errores de un campo.
-   * @param {'name'|'address'} field
-   * @param {string} message - vacío para limpiar
-   */
   function setFieldError(field, message) {
     const inputEl = field === 'name' ? el.inputName : el.inputAddress;
     const errorEl = field === 'name' ? el.errorName : el.errorAddress;
+    if (!inputEl || !errorEl) return;
 
     if (message) {
       inputEl.classList.add('input-error');
-      errorEl.textContent = message; // safe
+      errorEl.textContent = message;
     } else {
       inputEl.classList.remove('input-error');
       errorEl.textContent = '';
     }
   }
 
-  /* ─────────────────────────────────────────────
-     TOAST DE NOTIFICACIÓN
-  ───────────────────────────────────────────── */
-
   let _toastTimer = null;
 
-  /**
-   * Muestra un mensaje tipo toast al usuario.
-   * @param {string} message
-   * @param {number} duration ms
-   */
-  function showToast(message, duration = 2500) {
-    // Eliminar toast anterior si existe
+  function showToast(message, duration = 2400) {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
     if (_toastTimer) clearTimeout(_toastTimer);
@@ -592,69 +1068,64 @@ const AppView = (() => {
     toast.className = 'toast';
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
-    toast.textContent = message; // safe — nunca renderizamos HTML del usuario
+    toast.textContent = message;
 
     document.body.appendChild(toast);
-
-    // Forzar reflow antes de añadir clase
     void toast.offsetWidth;
     toast.classList.add('show');
 
     _toastTimer = setTimeout(() => {
       toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 400);
+      setTimeout(() => toast.remove(), 250);
     }, duration);
   }
 
-  /* ─────────────────────────────────────────────
-     LECTURA DE VALORES DEL FORMULARIO
-  ───────────────────────────────────────────── */
-
-  /**
-   * Retorna los valores del formulario de checkout.
-   * @returns {{name: string, address: string, notes: string}}
-   */
   function getFormValues() {
+    const checkedRadio = document.querySelector('input[name="payment-method"]:checked');
     return {
-      name:    el.inputName.value.trim(),
-      address: el.inputAddress.value.trim(),
-      notes:   el.inputNotes.value.trim(),
+      name: el.inputName ? el.inputName.value.trim() : '',
+      address: el.inputAddress ? el.inputAddress.value.trim() : '',
+      notes: el.inputNotes ? el.inputNotes.value.trim() : '',
+      paymentMethod: checkedRadio ? checkedRadio.value : 'cash',
     };
   }
 
-  /** Limpia el formulario */
   function resetForm() {
-    el.checkoutForm.reset();
+    if (el.checkoutForm) el.checkoutForm.reset();
     setFieldError('name', '');
     setFieldError('address', '');
+    updatePaymentMethodView('cash');
   }
 
-  /* ─────────────────────────────────────────────
-     BINDINGS DE EVENTOS (los conecta el Controller)
-  ───────────────────────────────────────────── */
-
-  function bindOpenCart(handler)    { el.btnCartOpen.addEventListener('click', handler); }
-  function bindCloseCart(handler)   {
-    el.btnCartClose.addEventListener('click', handler);
-    el.cartOverlay.addEventListener('click', handler);
+  function bindOpenCart(handler) {
+    if (el.btnCartOpen) el.btnCartOpen.addEventListener('click', handler);
   }
-  function bindCheckoutSubmit(handler) {
-    el.checkoutForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      handler();
+
+  function bindCloseCart(handler) {
+    if (el.btnCartClose) el.btnCartClose.addEventListener('click', handler);
+    if (el.cartOverlay) el.cartOverlay.addEventListener('click', handler);
+  }
+
+  function bindPaymentChange(handler) {
+    el.paymentTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const input = tab.querySelector('input[type="radio"]');
+        if (input) {
+          handler(input.value);
+        }
+      });
     });
   }
 
-  /* ─────────────────────────────────────────────
-     UTILIDADES PRIVADAS
-  ───────────────────────────────────────────── */
+  function bindCheckoutSubmit(handler) {
+    if (el.checkoutForm) {
+      el.checkoutForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handler();
+      });
+    }
+  }
 
-  /**
-   * Formatea un número como precio en Pesos Colombianos (COP).
-   * Ejemplo: 18900 → "$\u00a018.900"
-   * @param {number} amount
-   * @returns {string}
-   */
   function _formatPrice(amount) {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -666,8 +1137,11 @@ const AppView = (() => {
 
   return {
     init,
-    renderCatalog,
+    renderProducts,
+    renderCategoryNavbar,
+    renderCatalog: renderProducts,
     renderCart,
+    updatePaymentMethodView,
     updateCartCount,
     openCart,
     closeCart,
@@ -677,219 +1151,182 @@ const AppView = (() => {
     resetForm,
     bindOpenCart,
     bindCloseCart,
+    bindPaymentChange,
     bindCheckoutSubmit,
   };
 })();
 
-/* ============================================================
-    ██████  ██████  ███    ██ ████████ ██████   ██████  ██      ██      ███████ ██████
-   ██      ██    ██ ████   ██    ██    ██   ██ ██    ██ ██      ██      ██      ██   ██
-   ██      ██    ██ ██ ██  ██    ██    ██████  ██    ██ ██      ██      █████   ██████
-   ██      ██    ██ ██  ██ ██    ██    ██   ██ ██    ██ ██      ██      ██      ██   ██
-    ██████  ██████  ██   ████    ██    ██   ██  ██████  ███████ ███████ ███████ ██   ██
+// Alias para compatibilidad hacia atrás
+const AppView = StoreView;
 
-   CONTROLLER — orquesta Model + View, maneja la lógica de negocio.
+/* ============================================================
+   3. CONTROLADOR (AppController)
+   Orquesta la interacción de Model y View y enlace a WhatsApp
    ============================================================ */
 
 const AppController = (() => {
-  /* ─────────────────────────────────────────────
-     INICIALIZACIÓN
-  ───────────────────────────────────────────── */
-
   function init() {
-    AppView.init();
+    StoreView.init();
 
-    // Renderizar catálogo
-    AppView.renderCatalog(PRODUCTS, _onAddToCart);
+    // 1. Renderizar la barra sticky de navegación con categorías únicas del modelo
+    const categories = storeModel.getCategories();
+    StoreView.renderCategoryNavbar(categories);
 
-    // Vincular eventos globales
-    AppView.bindOpenCart(_onOpenCart);
-    AppView.bindCloseCart(_onCloseCart);
-    AppView.bindCheckoutSubmit(_onCheckoutSubmit);
+    // 2. Renderizar el catálogo completo agrupado por categoría
+    StoreView.renderProducts(storeModel.getProducts(), _onAddToCart);
+    StoreView.updatePaymentMethodView(storeModel.getPaymentMethod());
 
-    // Cerrar drawer con la tecla Escape
+    // 3. Vincular eventos de la interfaz
+    StoreView.bindOpenCart(_onOpenCart);
+    StoreView.bindCloseCart(_onCloseCart);
+    StoreView.bindPaymentChange(_onPaymentChange);
+    StoreView.bindCheckoutSubmit(_onCheckoutSubmit);
+
+    // Cerrar drawer al presionar Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') _onCloseCart();
     });
 
-    // Marcar header al hacer scroll
+    // Añadir sombra sutil a la cabecera al hacer scroll
     const header = document.querySelector('.site-header');
     if (header) {
       window.addEventListener('scroll', () => {
-        header.classList.toggle('scrolled', window.scrollY > 10);
+        header.classList.toggle('scrolled', window.scrollY > 12);
       }, { passive: true });
     }
-
-    console.log('[QuickSync] App inicializada correctamente.');
   }
 
-  /* ─────────────────────────────────────────────
-     HANDLERS DE CARRITO
-  ───────────────────────────────────────────── */
-
-  /** Añadir al carrito */
   function _onAddToCart(productId) {
-    const added = CartModel.addItem(productId);
+    const added = storeModel.addItem(productId);
     if (!added) return;
 
     _refreshCart();
-    AppView.showToast('¡Producto añadido al carrito! 🛒');
+    StoreView.showToast('Plato añadido a su orden');
   }
 
-  /** Incrementar cantidad desde el drawer */
   function _onIncrement(productId) {
-    CartModel.addItem(productId);
+    storeModel.addItem(productId);
     _refreshCart();
   }
 
-  /** Decrementar / eliminar desde el drawer */
   function _onDecrement(productId) {
-    CartModel.decrementItem(productId);
+    storeModel.decrementItem(productId);
     _refreshCart();
   }
 
-  /** Sincroniza el estado del carrito en la View */
+  function _onPaymentChange(method) {
+    storeModel.setPaymentMethod(method);
+    StoreView.updatePaymentMethodView(method);
+  }
+
   function _refreshCart() {
-    const items    = CartModel.getItems();
-    const subtotal = CartModel.getSubtotal();
-    const count    = CartModel.getTotalCount();
+    const items        = storeModel.getItems();
+    const subtotal     = storeModel.getSubtotal();
+    const shippingCost = storeModel.getShippingCost();
+    const total        = storeModel.getTotal();
+    const count        = storeModel.getTotalCount();
 
-    AppView.renderCart(items, subtotal, _onIncrement, _onDecrement);
-    AppView.updateCartCount(count);
+    StoreView.renderCart(items, subtotal, shippingCost, total, _onIncrement, _onDecrement);
+    StoreView.updateCartCount(count);
   }
 
-  /** Abrir drawer */
   function _onOpenCart() {
-    _refreshCart(); // Asegurar que esté actualizado
-    AppView.openCart();
+    _refreshCart();
+    StoreView.openCart();
   }
 
-  /** Cerrar drawer */
   function _onCloseCart() {
-    AppView.closeCart();
+    StoreView.closeCart();
   }
 
-  /* ─────────────────────────────────────────────
-     CHECKOUT → WHATSAPP
-  ───────────────────────────────────────────── */
-
-  /**
-   * Valida el formulario y construye el enlace de WhatsApp.
-   * Toda la construcción del mensaje usa encodeURIComponent()
-   * para evitar inyecciones en la URI y garantizar saltos de línea.
-   */
   function _onCheckoutSubmit() {
-    const { name, address, notes } = AppView.getFormValues();
+    const { name, address, notes, paymentMethod } = StoreView.getFormValues();
 
-    // ── Validación del formulario ──
     let isValid = true;
 
-    // Nombre: requerido, mín 2 caracteres
     if (!name || name.length < 2) {
-      AppView.setFieldError('name', 'Por favor ingresa tu nombre completo.');
+      StoreView.setFieldError('name', 'Por favor ingrese su nombre y apellido completo.');
       isValid = false;
     } else {
-      AppView.setFieldError('name', '');
+      StoreView.setFieldError('name', '');
     }
 
-    // Dirección: requerida, mín 5 caracteres
     if (!address || address.length < 5) {
-      AppView.setFieldError('address', 'Por favor ingresa una dirección válida.');
+      StoreView.setFieldError('address', 'Por favor ingrese la dirección exacta de entrega.');
       isValid = false;
     } else {
-      AppView.setFieldError('address', '');
+      StoreView.setFieldError('address', '');
     }
 
     if (!isValid) return;
 
-    // ── Carrito no vacío ──
-    if (CartModel.isEmpty()) {
-      AppView.showToast('Tu carrito está vacío. Agrega productos primero.');
+    if (storeModel.isEmpty()) {
+      StoreView.showToast('Su orden está vacía. Seleccione productos de la carta.');
       return;
     }
 
-    // ── Construcción del mensaje ──
-    const whatsappUrl = _buildWhatsAppURL(name, address, notes);
-
-    // Redirigir (abre WhatsApp en nueva pestaña)
+    const whatsappUrl = _buildWhatsAppURL(name, address, notes, paymentMethod);
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-
-    // UX: notificación de éxito
-    AppView.showToast('✅ ¡Pedido enviado! Te redirigimos a WhatsApp.');
+    StoreView.showToast('Redirigiendo a WhatsApp oficial...');
   }
 
   /**
-   * Construye la URL de WhatsApp con el mensaje del pedido.
-   * Usa encodeURIComponent para todos los valores dinámicos.
-   *
-   * Ejemplo de mensaje resultante (sin encode):
-   * ─────────────────────────────
-   * 🛒 *NUEVO PEDIDO — QuickSync*
-   * ─────────────────────────────
-   * 👤 Cliente: María García
-   * 📍 Dirección: Calle 123
-   *
-   * 📋 *DETALLE DEL PEDIDO:*
-   * • 2x Classic Bacon Burger — $25.98
-   * • 1x Double Smash Burger — $15.99
-   *
-   * 💰 *TOTAL: $41.97*
-   * 📝 Notas: Sin cebolla
-   * ─────────────────────────────
-   *
-   * @param {string} name
-   * @param {string} address
-   * @param {string} notes
-   * @returns {string} URL completa
+   * Genera el mensaje formal de confirmación para WhatsApp.
+   * Totalmente libre de emojis, con estructura corporativa y codificación URI segura.
    */
-  function _buildWhatsAppURL(name, address, notes) {
-    const items    = CartModel.getItems();
-    const subtotal = CartModel.getSubtotal();
+  function _buildWhatsAppURL(name, address, notes, paymentMethod) {
+    const items = storeModel.getItems();
+    const subtotal = storeModel.getSubtotal();
+    const shipping = storeModel.getShippingCost();
+    const total = storeModel.getTotal();
 
-    // Separador decorativo
-    const sep = '─'.repeat(32);
-
-    // Construir líneas del mensaje como strings literales
-    // Los precios vienen del Model — no del DOM.
-    let message = `${sep}\n`;
-    message += `🛒 *NUEVO PEDIDO — QuickSync*\n`;
-    message += `${sep}\n`;
-    message += `👤 *Cliente:* ${name}\n`;
-    message += `📍 *Dirección:* ${address}\n\n`;
-    message += `📋 *DETALLE DEL PEDIDO:*\n`;
-
-    // Helper: formato COP, ej: $ 18.900
-    const toCOP = (amount) =>
+    const toCOP = (val) =>
       new Intl.NumberFormat('es-CO', {
-        style: 'currency', currency: 'COP',
-        minimumFractionDigits: 0, maximumFractionDigits: 0,
-      }).format(amount);
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(val);
+
+    const separator = '────────────────────────────────';
+
+    let message = `*SOLICITUD DE ORDEN — QUICKSYNC*\n`;
+    message += `${separator}\n`;
+    message += `*Cliente:* ${name}\n`;
+    message += `*Dirección de Entrega:* ${address}\n`;
+    if (notes) {
+      message += `*Observaciones / Notas:* ${notes}\n`;
+    }
+    message += `\n*DETALLE DE LA ORDEN:*\n`;
 
     items.forEach(({ product, quantity }) => {
-      // Cantidad validada como entero positivo (garantizado por el Model)
-      const lineTotal = toCOP(product.price * quantity);
-      message += `  • ${quantity}x ${product.name} — ${lineTotal}\n`;
+      const lineSubtotal = toCOP(product.price * quantity);
+      message += `• ${quantity}x ${product.name} — ${lineSubtotal}\n`;
     });
 
-    message += `\n💰 *TOTAL: ${toCOP(subtotal)}*\n`;
+    message += `\n*Subtotal:* ${toCOP(subtotal)}\n`;
+    message += `*Servicio de Entrega:* ${toCOP(shipping)}\n`;
+    message += `*TOTAL A LIQUIDAR:* ${toCOP(total)}\n\n`;
 
-    if (notes) {
-      message += `📝 *Notas:* ${notes}\n`;
+    if (paymentMethod === 'transfer') {
+      message += `*Modalidad de Pago:* Transferencia electrónica (Nequi / Breb)\n`;
+      message += `_Adjunto constancia de transferencia bancaria a continuación._\n`;
+    } else {
+      message += `*Modalidad de Pago:* Efectivo contra entrega\n`;
     }
 
-    message += `${sep}`;
+    message += `${separator}\n`;
+    message += `_Orden generada desde QuickSync Web_`;
 
-    // encodeURIComponent para toda la cadena — previene inyecciones en la URI
-    const encodedMessage = encodeURIComponent(message);
-
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const encoded = encodeURIComponent(message);
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`;
   }
 
   return { init };
 })();
 
 /* ============================================================
-   BOOTSTRAP — Arranque de la app cuando el DOM está listo
+   ARRANQUE DE LA APLICACIÓN
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {

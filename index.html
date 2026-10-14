@@ -3,95 +3,148 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="QuickSync — Catálogo digital para restaurantes y comercios locales. Ordena fácil y rápido por WhatsApp." />
-  <meta name="theme-color" content="#ff6b35" />
+  <meta name="description" content="QuickSync — Menú Ejecutivo y Gastronomía de Autor. Servicio exclusivo a domicilio con gestión directa de órdenes vía WhatsApp." />
+  <meta name="theme-color" content="#111827" />
 
-  <!-- Open Graph / Social sharing -->
-  <meta property="og:type"        content="website" />
-  <meta property="og:title"       content="QuickSync — Ordena por WhatsApp" />
-  <meta property="og:description" content="Catálogo digital con carrito de compras. Pide en segundos." />
+  <!-- Open Graph / Redes Sociales -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="QuickSync — Gastronomía de Autor & Pedidos en Línea" />
+  <meta property="og:description" content="Cortes de carne madurados, pizzas napolitanas, cocina contemporánea y coctelería a domicilio." />
 
-  <title>QuickSync — Catálogo Digital</title>
+  <title>QuickSync — Carta Gastronómica & Servicio a Domicilio</title>
+
+  <!-- Google Fonts: Playfair Display + Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Favicon inline SVG as data URI (zero extra request) -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>" />
+  <!-- Favicon SVG vectorial limpio y corporativo -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23111827'/><text x='50' y='63' fill='%23ffffff' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='44'>Q</text></svg>" />
 </head>
 <body>
 
   <!-- =====================================================================
-       HEADER / NAV
+       HEADER / BARRA SUPERIOR PRINCIPAL
   ====================================================================== -->
   <header class="site-header" role="banner">
     <div class="header-inner container">
-      <!-- Logo / Brand -->
-      <a href="#catalog" class="brand" aria-label="QuickSync inicio">
-        <span class="brand-icon" aria-hidden="true">&#x26A1;</span>
-        <span class="brand-name">QuickSync</span>
+      <!-- Marca / Logo -->
+      <a href="#catalog" class="brand" aria-label="QuickSync Inicio">
+        <span class="brand-badge-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+            <line x1="6" y1="1" x2="6" y2="4"></line>
+            <line x1="10" y1="1" x2="10" y2="4"></line>
+            <line x1="14" y1="1" x2="14" y2="4"></line>
+          </svg>
+        </span>
+        <div class="brand-text">
+          <span class="brand-name">QuickSync</span>
+          <span class="brand-tagline">Alta Cocina & Bar</span>
+        </div>
       </a>
 
-      <!-- Tagline (hidden on small screens via CSS) -->
-      <p class="header-tagline">Pedidos rápidos &middot; Locales auténticos</p>
+      <!-- Frase de estado del servicio -->
+      <p class="header-highlight">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        Servicio activo &middot; Pedidos en línea
+      </p>
 
-      <!-- Cart toggle button -->
+      <!-- Botón selector de orden -->
       <button
         id="btn-cart-open"
         class="btn-cart-toggle"
-        aria-label="Abrir carrito de compras"
+        aria-label="Abrir resumen de la orden"
         aria-haspopup="dialog"
         aria-expanded="false"
         aria-controls="cart-drawer"
       >
-        <span class="cart-icon" aria-hidden="true">&#128722;</span>
+        <span class="cart-toggle-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </span>
+        <span class="cart-toggle-label">Mi Orden</span>
         <span class="cart-count" id="cart-count" aria-live="polite" aria-atomic="true">0</span>
       </button>
     </div>
   </header>
 
   <!-- =====================================================================
-       HERO SECTION
+       NAVEGACIÓN STICKY DE CATEGORÍAS (Barra Horizontal con Smooth Scroll)
+  ====================================================================== -->
+  <nav id="category-navbar" class="category-navbar" aria-label="Navegación de categorías del menú">
+    <div class="container category-navbar-container">
+      <div id="category-nav-list" class="category-nav-list" role="tablist">
+        <!-- Generado dinámicamente desde StoreView en app.js -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- =====================================================================
+       HERO SECTION — Sofisticado, Corporativo y Limpio
   ====================================================================== -->
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-bg-glow" aria-hidden="true"></div>
     <div class="hero-content container">
-      <span class="hero-badge" aria-hidden="true">&#x1F525; Novedad</span>
-      <h1 id="hero-title" class="hero-title">Ordena tu favorito<br /><em>en segundos</em></h1>
+      <div class="hero-badge">
+        <span>Selección Gastronómica &middot; Ingredientes Seleccionados</span>
+      </div>
+
+      <h1 id="hero-title" class="hero-title">
+        Experiencia culinaria de alta gama,<br />
+        <em>en la comodidad de su residencia</em>
+      </h1>
+
       <p class="hero-subtitle">
-        Elige del menú, arma tu pedido y te lo enviamos por WhatsApp.<br />
-        Sin apps, sin cuentas, sin complicaciones.
+        Cortes madurados a la brasa, especialidades de masa madre, alta coctelería y gastronomía asiática.
+        Coordine su orden en línea con servicio de entrega prioritario a su dirección.
       </p>
-      <a href="#catalog" class="btn btn-primary hero-cta">
-        Ver el menú &#8595;
-      </a>
+
+      <div class="hero-actions">
+        <a href="#catalog" class="btn btn-primary hero-cta">
+          Explorar la Carta
+        </a>
+        <div class="hero-trust">
+          <span class="trust-text">Tarifa de entrega metropolitana: <strong>$4.000 COP</strong></span>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- =====================================================================
-       MAIN CONTENT — PRODUCT CATALOG
+       CATÁLOGO DE PRODUCTOS (Agrupado por Categorías)
   ====================================================================== -->
   <main id="main-content">
     <section id="catalog" class="catalog-section" aria-labelledby="catalog-title">
       <div class="container">
         <header class="section-header">
-          <h2 id="catalog-title" class="section-title">Nuestro Menú</h2>
-          <p class="section-subtitle">Ingredientes frescos &middot; Preparados al momento</p>
+          <span class="section-kicker">Propuesta Gastronómica</span>
+          <h2 id="catalog-title" class="section-title">Nuestra Carta</h2>
+          <p class="section-subtitle">Preparaciones ejecutivas elaboradas al momento</p>
         </header>
 
-        <!-- Product grid — populated by View.renderCatalog() -->
+        <!-- Grid de productos donde se inyectan las categorías y tarjetas -->
         <div
           id="product-grid"
           class="product-grid"
           role="list"
           aria-label="Catálogo de productos"
-        >
-          <!-- JS renders article cards here -->
-        </div>
+        ></div>
       </div>
     </section>
   </main>
 
   <!-- =====================================================================
-       CART DRAWER (Off-canvas panel)
+       PANEL LATERAL DE LA ORDEN (SIDEBAR ESPACIOSO Y FORMAL)
   ====================================================================== -->
   <div
     id="cart-overlay"
@@ -106,145 +159,219 @@
     class="cart-drawer"
     role="dialog"
     aria-modal="true"
-    aria-label="Carrito de compras"
+    aria-label="Resumen de la Orden"
     aria-hidden="true"
   >
-    <!-- Drawer header -->
+    <!-- 1. Cabecera del Drawer -->
     <div class="cart-drawer-header">
-      <h2 class="cart-drawer-title">
-        <span aria-hidden="true">&#128722;</span> Tu Pedido
-      </h2>
+      <div class="cart-drawer-title-group">
+        <h2 class="cart-drawer-title">Resumen de la Orden</h2>
+        <span class="cart-drawer-subtitle">Detalle de selección y liquidación</span>
+      </div>
       <button
         id="btn-cart-close"
-        class="btn-icon"
-        aria-label="Cerrar carrito"
-      >&#10005;</button>
-    </div>
-
-    <!-- Cart items list — populated by View.renderCart() -->
-    <div
-      id="cart-items"
-      class="cart-items"
-      role="list"
-      aria-label="Productos en el carrito"
-      aria-live="polite"
-    >
-      <!-- Populated by JS -->
-    </div>
-
-    <!-- Cart empty state -->
-    <div id="cart-empty" class="cart-empty" aria-hidden="false">
-      <span class="cart-empty-icon" aria-hidden="true">&#127869;</span>
-      <p>Tu carrito está vacío.</p>
-      <p class="cart-empty-sub">¡Agrega algo delicioso!</p>
-    </div>
-
-    <!-- Cart totals -->
-    <div id="cart-summary" class="cart-summary" aria-hidden="true">
-      <div class="summary-row">
-        <span>Subtotal</span>
-        <span id="cart-subtotal" aria-live="polite">$0.00</span>
-      </div>
-      <div class="summary-row summary-row--total">
-        <span>Total</span>
-        <span id="cart-total" aria-live="polite">$0.00</span>
-      </div>
-    </div>
-
-    <!-- ===== Checkout form ===== -->
-    <form
-      id="checkout-form"
-      class="checkout-form"
-      novalidate
-      aria-hidden="true"
-      aria-label="Formulario de checkout"
-    >
-      <h3 class="checkout-title">Datos del pedido</h3>
-
-      <div class="form-group">
-        <label for="input-name">Nombre completo *</label>
-        <input
-          type="text"
-          id="input-name"
-          name="name"
-          placeholder="Ej: María García"
-          maxlength="80"
-          autocomplete="name"
-          required
-        />
-        <span class="form-error" id="error-name" role="alert" aria-live="assertive"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="input-address">Dirección de entrega *</label>
-        <input
-          type="text"
-          id="input-address"
-          name="address"
-          placeholder="Ej: Calle 123, Colonia Centro"
-          maxlength="150"
-          autocomplete="street-address"
-          required
-        />
-        <span class="form-error" id="error-address" role="alert" aria-live="assertive"></span>
-      </div>
-
-      <div class="form-group">
-        <label for="input-notes">Notas adicionales</label>
-        <textarea
-          id="input-notes"
-          name="notes"
-          placeholder="Ej: Sin cebolla, picante extra..."
-          rows="3"
-          maxlength="300"
-        ></textarea>
-      </div>
-
-      <button
-        type="submit"
-        id="btn-whatsapp"
-        class="btn btn-whatsapp"
-        aria-label="Enviar pedido por WhatsApp"
+        class="btn-icon-close"
+        aria-label="Cerrar resumen de orden"
       >
-        <span class="whatsapp-icon" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-        </span>
-        Enviar por WhatsApp
+        <span aria-hidden="true">&#10005;</span>
       </button>
-    </form>
+    </div>
+
+    <!-- Estado vacío -->
+    <div id="cart-empty" class="cart-empty" aria-hidden="false">
+      <div class="cart-empty-visual" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+      </div>
+      <h3 class="cart-empty-title">Su orden se encuentra vacía</h3>
+      <p class="cart-empty-text">Seleccione los platos o bebidas de su preferencia desde el menú para iniciar su solicitud.</p>
+      <a href="#catalog" class="btn btn-secondary btn-empty-cta" id="btn-empty-browse">
+        Explorar el Menú
+      </a>
+    </div>
+
+    <!-- Contenedor de la orden con items -->
+    <div id="cart-content" class="cart-content">
+      <!-- 2. Listado de Productos en Rejilla de 2 Columnas -->
+      <div
+        id="cart-items"
+        class="cart-items"
+        role="list"
+        aria-label="Platos y bebidas seleccionadas"
+        aria-live="polite"
+      ></div>
+
+      <!-- Formulario de Formalización de la Orden -->
+      <form
+        id="checkout-form"
+        class="checkout-form"
+        novalidate
+        aria-label="Datos para la entrega de la orden"
+      >
+        <!-- 3. Datos del Destinatario -->
+        <div class="form-section-compact">
+          <h3 class="compact-section-title">Datos de Entrega</h3>
+          <div class="form-grid-compact">
+            <div class="form-field">
+              <input
+                type="text"
+                id="input-name"
+                name="name"
+                placeholder="Nombre y apellido completo"
+                maxlength="80"
+                autocomplete="name"
+                required
+              />
+              <span class="form-error-compact" id="error-name" role="alert"></span>
+            </div>
+
+            <div class="form-field">
+              <input
+                type="text"
+                id="input-address"
+                name="address"
+                placeholder="Dirección exacta de entrega (apto/oficina)"
+                maxlength="150"
+                autocomplete="street-address"
+                required
+              />
+              <span class="form-error-compact" id="error-address" role="alert"></span>
+            </div>
+
+            <div class="form-field form-field--full">
+              <input
+                type="text"
+                id="input-notes"
+                name="notes"
+                placeholder="Instrucciones para cocina o indicaciones de acceso (opcional)"
+                maxlength="300"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Modalidad de Pago -->
+        <div class="form-section-compact">
+          <h3 class="compact-section-title">Modalidad de Pago</h3>
+          <div class="payment-tabs-compact" role="radiogroup" aria-label="Modalidad de pago">
+            <label class="payment-tab selected" for="pay-cash">
+              <input
+                type="radio"
+                id="pay-cash"
+                name="payment-method"
+                value="cash"
+                checked
+              />
+              <span>Efectivo contra entrega</span>
+            </label>
+
+            <label class="payment-tab" for="pay-transfer">
+              <input
+                type="radio"
+                id="pay-transfer"
+                name="payment-method"
+                value="transfer"
+              />
+              <span>Transferencia electrónica (Nequi / Breb)</span>
+            </label>
+          </div>
+
+          <!-- Información de Cuentas Corporativas -->
+          <div id="transfer-info" class="transfer-info-compact" style="display: none;">
+            <div class="transfer-grid-compact">
+              <div class="transfer-item-compact">
+                <span class="account-tag-compact">Nequi: <strong>3192784589</strong></span>
+                <button
+                  type="button"
+                  class="btn-copy-compact"
+                  data-copy="3192784589"
+                  aria-label="Copiar número de Nequi"
+                >
+                  <span class="copy-label">Copiar</span>
+                </button>
+              </div>
+
+              <div class="transfer-item-compact">
+                <span class="account-tag-compact">Breb (Llave): <strong>miguel2281</strong></span>
+                <button
+                  type="button"
+                  class="btn-copy-compact"
+                  data-copy="miguel2281"
+                  aria-label="Copiar llave Breb"
+                >
+                  <span class="copy-label">Copiar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Resumen Financiero y Total a Liquidar -->
+        <div id="cart-summary" class="cart-summary-compact">
+          <div class="summary-line-compact">
+            <span>Subtotal de productos</span>
+            <span id="cart-subtotal" class="summary-val-compact">$0</span>
+          </div>
+          <div class="summary-line-compact">
+            <span>Servicio de entrega</span>
+            <span id="cart-shipping" class="summary-val-compact">$4.000</span>
+          </div>
+          <div class="summary-banner-total">
+            <div class="total-text-group">
+              <span class="total-title">Total a Liquidar</span>
+              <span class="total-sub">Tarifa neta con transporte incluido</span>
+            </div>
+            <span id="cart-total" class="total-amount">$0</span>
+          </div>
+        </div>
+
+        <!-- 6. Botón de Confirmación por WhatsApp -->
+        <button
+          type="submit"
+          id="btn-whatsapp"
+          class="btn-whatsapp-compact"
+          aria-label="Confirmar orden vía WhatsApp"
+        >
+          Confirmar Orden vía WhatsApp
+        </button>
+      </form>
+    </div>
   </aside>
 
   <!-- =====================================================================
-       FOOTER
+       FOOTER CORPORATIVO
   ====================================================================== -->
   <footer class="site-footer" role="contentinfo">
-    <div class="container">
-      <p class="footer-text">
-        &#x26A1; QuickSync MVP &mdash; Catálogo digital para comercios locales
+    <div class="container footer-container">
+      <div class="footer-brand">
+        <span class="footer-title">QuickSync &middot; Cocina de Autor & Bar</span>
+      </div>
+      <p class="footer-desc">
+        Estándares de alta cocina, cortes seleccionados e ingredientes de primera procedencia.
       </p>
-      <!-- Instagram link — plain anchor, no embed, no invitation widget -->
+
       <div class="footer-social">
         <a
           href="https://instagram.com/migue__m20"
           target="_blank"
           rel="noopener noreferrer"
           class="footer-instagram"
-          aria-label="Síguenos en Instagram @migue__m20"
+          aria-label="Seguir en Instagram @migue__m20"
         >
-          <!-- Instagram SVG icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true">
             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
           </svg>
           <span>@migue__m20</span>
         </a>
       </div>
-      <p class="footer-sub">Hecho con &#10084; &middot; Potenciado por WhatsApp Business</p>
+      <p class="footer-copy">QuickSync Gastronomía S.A.S. &middot; Colombia &middot; Servicio de atención formal vía WhatsApp</p>
     </div>
   </footer>
 
-  <!-- App script — deferred for performance -->
+  <!-- Script principal de la aplicación -->
   <script src="app.js" defer></script>
 </body>
 </html>
